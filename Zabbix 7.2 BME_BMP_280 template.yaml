@@ -1,0 +1,80 @@
+zabbix_export:
+  version: '7.2'
+  template_groups:
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    - uuid: 33dbf5661ad5495b8d45c1c734dc4e14
+      template: 'BME_BMP_280 Raspberry Pi'
+      name: 'BME_BMP_280 Raspberry Pi'
+      groups:
+        - name: Templates
+      items:
+        - uuid: fa9e59460bff4f7eb9bd61c9406fae39
+          name: Pressure
+          type: DEPENDENT
+          key: bme280.pressure
+          value_type: FLOAT
+          units: '!hPA'
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - 'Pressure:\s+(-?[0-9.]+)'
+                - \1
+              error_handler: DISCARD_VALUE
+          master_item:
+            key: 'ssh.run[data]'
+        - uuid: 35b057b0c5cf427babcd12e8f9888d12
+          name: Humidity
+          type: DEPENDENT
+          key: bme_bmp_280.humidity
+          value_type: FLOAT
+          units: '%'
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - 'Humidity:\s+(-?[0-9.]+)'
+                - \1
+              error_handler: DISCARD_VALUE
+          master_item:
+            key: 'ssh.run[data]'
+        - uuid: 27a4006958fc43c18cbcd2c74ca70501
+          name: 'Sensor Type'
+          type: DEPENDENT
+          key: bme_bmp_280.sensor
+          value_type: TEXT
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - '^Sensor:\s+(\w+)'
+                - \1
+              error_handler: DISCARD_VALUE
+          master_item:
+            key: 'ssh.run[data]'
+        - uuid: 9f1ab009944b48bcaf1f7e96c612287a
+          name: Temperature
+          type: DEPENDENT
+          key: bme_bmp_280.temp
+          value_type: FLOAT
+          units: °C
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - 'Temperature:\s+(-?[0-9.]+)'
+                - \1
+              error_handler: DISCARD_VALUE
+          master_item:
+            key: 'ssh.run[data]'
+        - uuid: 8ccb4037ce654155bb921ebe4a75e7eb
+          name: 'BME_BMP_280 readings'
+          type: SSH
+          key: 'ssh.run[data]'
+          history: '0'
+          value_type: TEXT
+          params: /usr/lib/zabbix/externalscripts/BME_BMP_280.py
+          username: '{$SSH.USERNAME}'
+          password: '{$SSH.PASSWORD}'
+      macros:
+        - macro: '{$SSH.PASSWORD}'
+          type: SECRET_TEXT
+        - macro: '{$SSH.USERNAME}'
